@@ -10,6 +10,9 @@ import os, pandas as pd, numpy as np, logging, scipy.stats as stats, re, matplot
 from io import StringIO
 from bs4 import BeautifulSoup as bs
 
+from mpl_toolkits.basemap import Basemap as bm
+
+
 logging.basicConfig(level=logging.INFO)
 
 
@@ -70,13 +73,25 @@ def cities(number=10):
 	df=pd.DataFrame(list_data, columns=header)
 	return(df)
 
-def plotting(df,df_cities):
-	plt.scatter(x=df['longitude'],y=df['latitude'],alpha=.4,label='Fire locations')
-	plt.scatter(y=df_cities['lat'],x=df_cities['long'],marker='+',color='red',label='Major Cities')
-	plt.show(block=False)
-
+def plot_area(df):
+	#lower left
+	ll_lat=min(df['latitude'])-(max(df['latitude'])-min(df['latitude']))*.05
+	ll_lon=min(df['longitude'])-(max(df['longitude'])-min(df['longitude']))*.05
+	#upper right
+	ur_lat=max(df['latitude'])+(max(df['latitude'])-min(df['latitude']))*.05
+	ur_lon=max(df['longitude'])+(max(df['longitude'])-min(df['longitude']))*.05
+	
+	m = bm(projection='merc', resolution='c',llcrnrlat=ll_lat,llcrnrlon=ll_lon,urcrnrlat=ur_lat,urcrnrlon=ur_lon)
+	m.drawcoastlines()
+	m.drawcountries()
+	m.drawstates()
+		
+	for i,row in df.iterrows():
+		m.plot(row['longitude'],row['latitude'],'ro',alpha=.4,label='Fire locations',latlon=True)
+	
 if __name__=='__main__':
 	df=process()
-	df_cities=cities()
+	#df_cities=cities() # not needed for map representations.
 	
-	plotting(df,df_cities)
+	plot_area(df)
+	plt.show(block=False)
